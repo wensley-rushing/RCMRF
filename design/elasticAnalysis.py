@@ -1,6 +1,6 @@
 from client.geometry import Geometry
 from postprocess.opsv import *
-import openseespy.opensees as op
+import opensees.openseespy as op
 
 
 class ElasticAnalysis:

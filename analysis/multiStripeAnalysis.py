@@ -1,5 +1,5 @@
 import multiprocessing as mp
-import openseespy.opensees as op
+import opensees.openseespy as op
 import pandas as pd
 import numpy as np
 import os

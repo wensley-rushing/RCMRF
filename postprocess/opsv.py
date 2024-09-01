@@ -1,4 +1,4 @@
-import openseespy.opensees as ops
+import opensees.openseespy as ops
 import numpy as np
 
 

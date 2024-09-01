@@ -14,7 +14,7 @@ Hinge model information in primary direction
 Hinge model information in secondary direction (not necessary for 2D)
 Hinge model information for gravity frame elements (not necessary for 2D)
 """
-import openseespy.opensees as op
+import opensees.openseespy as op
 
 from analysis.multiStripeAnalysis import get_records
 from client.model import Model

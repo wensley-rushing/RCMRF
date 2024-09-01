@@ -1,7 +1,7 @@
 """
 Incremental Dynamic Analysis using Hunt, Trace and Fill algorithm
 """
-import openseespy.opensees as op
+import opensees.openseespy as op
 import numpy as np
 import pandas as pd
 import pickle

@@ -1,7 +1,7 @@
 """
 Performs eigenvalue analysis
 """
-import openseespy.opensees as op
+import opensees.openseespy as op
 import numpy as np
 
 

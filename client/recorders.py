@@ -2,7 +2,7 @@
 Defines recorders for the model
 Note: Recorders are very much generic, more options may be added as it suits the user
 """
-import openseespy.opensees as op
+import opensees.openseespy as op
 import numpy as np
 
 

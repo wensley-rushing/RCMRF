@@ -7,7 +7,7 @@ NLRHA = Non-linear response history analysis
 """
 import os
 from scipy.interpolate import interp1d
-import openseespy.opensees as op
+import opensees.openseespy as op
 import numpy as np
 import warnings
 

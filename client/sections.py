@@ -6,7 +6,7 @@ For Haselton springs, gross EI is utilized, as the subsequent expressions for ef
 contributors to pre-yield displacements, including flexure and shear strains, concrete cracking, and bond-slip.
 Ref: Haselton et al. (2016) Calibration of model to simulate response of reinforced concrete beam-columns to collapse.
 """
-import openseespy.opensees as op
+import opensees.openseespy as op
 
 
 class Sections:

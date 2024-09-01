@@ -1,7 +1,7 @@
 """
 Performs static analysis
 """
-import openseespy.opensees as op
+import opensees.openseespy as op
 
 
 class Static:

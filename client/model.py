@@ -1,7 +1,7 @@
 """
 Model creator of an RC MRF. Lumped hinge models following the recommendations of Haselton 2007 are used.
 """
-import openseespy.opensees as op
+import opensees.openseespy as op
 import pandas as pd
 
 from analysis.modal import Modal

@@ -2,7 +2,7 @@
 Incremental Dynamic Analysis using Hunt, Trace and Fill algorithm
 Object temporarily kept. Will be deleted later...
 """
-import openseespy.opensees as op
+import opensees.openseespy as op
 import numpy as np
 import pandas as pd
 from analysis.solutionAlgorithm import SolutionAlgorithm
