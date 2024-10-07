@@ -121,9 +121,9 @@ class Model:
         :return: None
         """
         if self.flag3d:
-            op.model('Basic', '-ndm', 3, '-ndf', 6)
+            self.model = op.Model(ndm=3, ndf=6)
         else:
-            op.model('Basic', '-ndm', 2, '-ndf', 3)
+            self.model = op.Model(ndm=2, ndf=3)
         print('[INITIATE] Model generation started')
 
     def _create_nodes(self, fixity='fixed'):
@@ -162,10 +162,10 @@ class Model:
             # Defining nodes
             if self.flag3d:
                 yloc = df['y'][n]
-                op.node(int(df['Node id'][n]), xloc, yloc, zloc)
+                self.model.node(int(df['Node id'][n]), xloc, yloc, zloc)
             else:
                 yloc = 0.
-                op.node(int(df['Node id'][n]), xloc, zloc)
+                self.model.node(int(df['Node id'][n]), xloc, zloc)
 
             # Restraining ground floor nodes
             if zloc == 0 and nodetag < 10000:
@@ -174,23 +174,23 @@ class Model:
                         # Fix or pin the base nodes
                         if (xloc == 0. or xloc == max(spans_x)) and (yloc == 0. or yloc == max(spans_y)):
                             # Fix the external columns of seismic frames
-                            op.fix(nodetag, 1, 1, 1, fix, fix, fix)
+                            self.model.fix(nodetag, 1, 1, 1, fix, fix, fix)
                         elif 0. < xloc < max(spans_x) and (yloc == 0. or yloc == max(spans_y)):
                             # Fix internal columns of X seismic frames against rotation in x direction
-                            op.fix(nodetag, 1, 1, 1, 0, fix, 0)
+                            self.model.fix(nodetag, 1, 1, 1, 0, fix, 0)
                         elif 0. < yloc < max(spans_y) and (xloc == 0. or xloc == max(spans_x)):
                             # Fix internal columns of Y seismic frames against rotation in y direction
-                            op.fix(nodetag, 1, 1, 1, fix, 0, 0)
+                            self.model.fix(nodetag, 1, 1, 1, fix, 0, 0)
                         else:
                             # Pin the columns of gravity columns
-                            op.fix(nodetag, 1, 1, 1, 0, 0, 0)
+                            self.model.fix(nodetag, 1, 1, 1, 0, 0, 0)
                     else:
                         # Fix or pin all base nodes
-                        op.fix(nodetag, 1, 1, 1, fix, fix, fix)
+                        self.model.fix(nodetag, 1, 1, 1, fix, fix, fix)
 
                 else:
                     # Fix the base columns
-                    op.fix(nodetag, 1, 1, fix)
+                    self.model.fix(nodetag, 1, 1, fix)
 
                 base_nodes.append(nodetag)
 
@@ -216,16 +216,16 @@ class Model:
         else:
             if self.flag3d:
                 # TODO add logic for precise estimation of offsets
-                op.geomTransf(col_transf_type, self.COL_TRANSF_TAG, 0., -1., 0.,
+                self.model.geomTransf(col_transf_type, self.COL_TRANSF_TAG, 0., -1., 0.,
                               "-jntOffset", 0.0, 0.0, 0.3, 0.0, 0.0, -0.3)
-                op.geomTransf(beam_transf_tag, self.BEAM_X_TRANSF_TAG, 0., -1., 0.,
+                self.model.geomTransf(beam_transf_tag, self.BEAM_X_TRANSF_TAG, 0., -1., 0.,
                               "-jntOffset", 0.2, 0.0, 0.0, -0.2, 0.0, 0.0)
-                op.geomTransf(beam_transf_tag, self.BEAM_Y_TRANSF_TAG, 1., 0., 0.,
+                self.model.geomTransf(beam_transf_tag, self.BEAM_Y_TRANSF_TAG, 1., 0., 0.,
                               "-jntOffset", 0.0, 0.2, 0.0, 0.0, -0.2, 0.0)
 
             else:
-                op.geomTransf(col_transf_type, self.COL_TRANSF_TAG, "-jntOffset", 0.0, 0.3, 0.0, -0.3)
-                op.geomTransf(beam_transf_tag, self.BEAM_X_TRANSF_TAG, "-jntOffset", 0.2, 0.0, -0.2, 0.0)
+                self.model.geomTransf(col_transf_type, self.COL_TRANSF_TAG, "-jntOffset", 0.0, 0.3, 0.0, -0.3)
+                self.model.geomTransf(beam_transf_tag, self.BEAM_X_TRANSF_TAG, "-jntOffset", 0.2, 0.0, -0.2, 0.0)
 
         print('[SUCCESS] Material Properties have been defined')
 
@@ -237,7 +237,7 @@ class Model:
         num_hinge = (len(self.g.heights) - 1) * len(self.g.widths)
         Ec = float(self.materials['Ec'])
         for h in range(num_hinge):
-            op.uniaxialMaterial('Elastic', 200000 + h, Ec * 1000)
+            self.model.uniaxialMaterial('Elastic', 200000 + h, Ec * 1000)
 
         print('[SUCCESS] Joint material properties have been defined')
 
@@ -308,7 +308,7 @@ class Model:
                 node_j = int(f"{self.sections['Storey'][ele] + 1}{self.sections['Bay'][ele]}10")
                 area = self.sections['b'][ele] * self.sections['h'][ele]
                 inertia = self.sections['b'][ele] * self.sections['h'][ele] ** 3 / 12
-                op.element('elasticBeamColumn', eleid, node_i, node_j, area, young_modulus, inertia,
+                self.model.element('elasticBeamColumn', eleid, node_i, node_j, area, young_modulus, inertia,
                            self.COL_TRANSF_TAG)
                 if self.sections['Bay'][ele] in (1, self.g.nbays + 1):
                     elements['Columns external'][self.sections['Storey'][ele]].append(eleid)
@@ -321,7 +321,7 @@ class Model:
                 node_j = int(f"{self.sections['Storey'][ele] + 1}{self.sections['Bay'][ele]}10")
                 area = self.sections['b'][ele] * self.sections['h'][ele]
                 inertia = self.sections['b'][ele] * self.sections['h'][ele] ** 3 / 12
-                op.element('elasticBeamColumn', eleid, node_i, node_j, area, young_modulus, inertia,
+                self.model.element('elasticBeamColumn', eleid, node_i, node_j, area, young_modulus, inertia,
                            self.COL_TRANSF_TAG)
                 if self.sections['Bay'][ele] in (1, self.g.nbays + 1):
                     elements['Columns external'][self.sections['Storey'][ele]].append(eleid)
@@ -333,7 +333,7 @@ class Model:
                 node_j = int(f"{self.sections['Storey'][ele] + 1}{self.sections['Bay'][ele] + 1}40")
                 area = self.sections['b'][ele] * self.sections['h'][ele]
                 inertia = self.sections['b'][ele] * self.sections['h'][ele] ** 3 / 12
-                op.element('elasticBeamColumn', eleid, node_i, node_j, area, young_modulus, inertia,
+                self.model.element('elasticBeamColumn', eleid, node_i, node_j, area, young_modulus, inertia,
                            self.BEAM_X_TRANSF_TAG)
                 elements['Beams'][self.sections['Storey'][ele]].append(eleid)
 
@@ -365,7 +365,7 @@ class Model:
                     mat4 = 0
                 if bay == self.g.nbays:
                     mat2 = 0
-                op.element('Joint2D', eleid, nd1, nd2, nd3, nd4, ndc, mat1, mat2, mat3, mat4, matc, 1)
+                self.model.element('Joint2D', eleid, nd1, nd2, nd3, nd4, ndc, mat1, mat2, mat3, mat4, matc, 1)
                 joint_id += 1
 
         print('[SUCCESS] Element connectivity and joint elements have been defined')
@@ -385,14 +385,14 @@ class Model:
             # Material definition
             pdelta_mat_tag = 300000 if self.hingeModel == 'haselton' else int(self.g.nbays + 2)
             if self.system == 'perimeter':
-                op.uniaxialMaterial('Elastic', pdelta_mat_tag, young_modulus)
+                self.model.uniaxialMaterial('Elastic', pdelta_mat_tag, young_modulus)
 
             # X coordinate of the columns
             x_coord = self.g.widths[(-1)] + 3.0
 
             # Geometric transformation for the columns
             pdelta_transf_tag = 3
-            op.geomTransf('Linear', pdelta_transf_tag)
+            self.model.geomTransf('Linear', pdelta_transf_tag)
 
             # Node creations and linking to the lateral load resisting structure
             for st in range(self.g.nst + 1):
@@ -402,8 +402,8 @@ class Model:
                     else:
                         node = int(f"{pdelta_mat_tag}{st}")
                     # Create and fix the node
-                    op.node(node, x_coord, self.g.heights[st])
-                    op.fix(node, 1, 1, 0)
+                    self.model.node(node, x_coord, self.g.heights[st])
+                    self.model.fix(node, 1, 1, 0)
                 else:
                     if self.hingeModel == 'haselton':
                         nodeFrame = int(f"{st + 1}{self.g.nbays + 1}20")
@@ -414,17 +414,17 @@ class Model:
                         node = int(f"{pdelta_mat_tag}{st}")
                         ele = int(f"1{self.g.nbays + 1}{st}")
                     # Create the node
-                    op.node(node, x_coord, self.g.heights[st])
+                    self.model.node(node, x_coord, self.g.heights[st])
 
                     if option == 'truss':
-                        op.element('Truss', ele, nodeFrame, node, 5.0, pdelta_mat_tag)
+                        self.model.element('Truss', ele, nodeFrame, node, 5.0, pdelta_mat_tag)
 
                     elif option == 'equaldof':
                         for bay in range(self.g.nbays + 1):
                             if self.hingeModel == 'haselton':
-                                op.equalDOF(node, int(f"{st + 1}{bay + 1}1"), 1)
+                                self.model.equalDOF(node, int(f"{st + 1}{bay + 1}1"), 1)
                             else:
-                                op.equalDOF(node, int(f"{bay + 1}{st}"), 1)
+                                self.model.equalDOF(node, int(f"{bay + 1}{st}"), 1)
 
                     else:
                         raise ValueError('[EXCEPTION] Wrong option for linking gravity columns (needs to be Truss '
@@ -445,11 +445,10 @@ class Model:
                     eleid = int(f"2{pdelta_mat_tag}{st}")
                     node_i = int(f"{pdelta_mat_tag}{st - 1}")
                     node_j = int(f"{pdelta_mat_tag}{st}")
-                op.element('elasticBeamColumn', eleid, node_i, node_j, agcol, young_modulus, izgcol, pdelta_transf_tag)
+                self.model.element('elasticBeamColumn', eleid, node_i, node_j, agcol, young_modulus, izgcol, pdelta_transf_tag)
 
             # Definition of loads
-            op.timeSeries('Linear', 11)
-            op.pattern('Plain', 11, 11)
+            self.model.pattern('Plain', 11, "Linear")
             pdelta_loads = self.loads[(self.loads['Pattern'] == 'pdelta')].reset_index(drop=True)
             for st in range(1, self.g.nst + 1):
                 load = pdelta_loads[(pdelta_loads['Storey'] == st)]['Load'].iloc[0]
@@ -457,9 +456,9 @@ class Model:
                     pass
                 else:
                     if self.hingeModel == 'haselton':
-                        op.load(int(f"{st}{self.g.nbays + 2}"), self.NEGLIGIBLE, -load, self.NEGLIGIBLE)
+                        self.model.load(int(f"{st}{self.g.nbays + 2}"), self.NEGLIGIBLE, -load, self.NEGLIGIBLE)
                     else:
-                        op.load(int(f"{pdelta_mat_tag}{st}"), self.NEGLIGIBLE, -load, self.NEGLIGIBLE)
+                        self.model.load(int(f"{pdelta_mat_tag}{st}"), self.NEGLIGIBLE, -load, self.NEGLIGIBLE)
 
             print('[SUCCESS] P-Delta columns have been defined')
 
@@ -517,7 +516,7 @@ class Model:
                         # Mass based on tributary area
                         q = self.loads[(self.loads["Pattern"] == "q") & (self.loads["Storey"] == st)]["Load"].iloc[0]
                         mass = area * q / 9.81
-                        op.mass(nodetag, mass, mass, mass, self.NEGLIGIBLE, self.NEGLIGIBLE, self.NEGLIGIBLE)
+                        self.model.mass(nodetag, mass, mass, mass, self.NEGLIGIBLE, self.NEGLIGIBLE, self.NEGLIGIBLE)
 
         else:
             masses = self.loads[(self.loads['Pattern'] == 'mass')].reset_index(drop=True)
@@ -529,9 +528,9 @@ class Model:
                         m = masses[(masses['Storey'] == st + 1)]['Load'].iloc[0] / self.g.nbays
                     # Assign the masses
                     if self.hingeModel == 'haselton':
-                        op.mass(int(f"{st + 2}{bay + 1}10"), m, self.NEGLIGIBLE, self.NEGLIGIBLE)
+                        self.model.mass(int(f"{st + 2}{bay + 1}10"), m, self.NEGLIGIBLE, self.NEGLIGIBLE)
                     else:
-                        op.mass(int(f"{bay + 1}{st + 1}"), m, self.NEGLIGIBLE, self.NEGLIGIBLE)
+                        self.model.mass(int(f"{bay + 1}{st + 1}"), m, self.NEGLIGIBLE, self.NEGLIGIBLE)
 
             else:
                 print('[SUCCESS] Seismic masses have been defined')
@@ -578,8 +577,7 @@ class Model:
             apply_point = False
 
         if apply_loads:
-            op.timeSeries('Linear', 1)
-            op.pattern('Plain', 1, 1)
+            self.model.pattern('Plain', 1, "Linear")
 
             if self.hingeModel == 'haselton':
                 distributed = self.loads[(self.loads['Pattern'] == 'distributed')].reset_index(drop=True)
@@ -590,7 +588,7 @@ class Model:
                         pass
                     else:
                         for ele in ele_ids:
-                            op.eleLoad('-ele', ele, '-type', '-beamUniform', -load)
+                            self.model.eleLoad('-ele', ele, '-type', '-beamUniform', -load)
 
             else:
                 for ele in elements['Beams']:
@@ -623,12 +621,12 @@ class Model:
                                 nodej = beam - 3000 + 100
 
                                 if apply_point:
-                                    op.load(nodei, self.NEGLIGIBLE, self.NEGLIGIBLE, -load * spans_x[xbay - 1] / 2,
+                                    self.model.load(nodei, self.NEGLIGIBLE, self.NEGLIGIBLE, -load * spans_x[xbay - 1] / 2,
                                             self.NEGLIGIBLE, self.NEGLIGIBLE, self.NEGLIGIBLE)
-                                    op.load(nodej, self.NEGLIGIBLE, self.NEGLIGIBLE, -load * spans_x[xbay - 1] / 2,
+                                    self.model.load(nodej, self.NEGLIGIBLE, self.NEGLIGIBLE, -load * spans_x[xbay - 1] / 2,
                                             self.NEGLIGIBLE, self.NEGLIGIBLE, self.NEGLIGIBLE)
                                 else:
-                                    op.eleLoad('-ele', beam, '-type', '-beamUniform', -load, self.NEGLIGIBLE)
+                                    self.model.eleLoad('-ele', beam, '-type', '-beamUniform', -load, self.NEGLIGIBLE)
 
                                 # Additional load for interior beams
                                 if 1 < ybay < len(spans_y) + 1:
@@ -643,14 +641,14 @@ class Model:
 
                                     # Applying the load
                                     if apply_point:
-                                        op.load(nodei, self.NEGLIGIBLE, self.NEGLIGIBLE,
+                                        self.model.load(nodei, self.NEGLIGIBLE, self.NEGLIGIBLE,
                                                 -load * spans_x[xbay - 1] / 2,
                                                 self.NEGLIGIBLE, self.NEGLIGIBLE, self.NEGLIGIBLE)
-                                        op.load(nodej, self.NEGLIGIBLE, self.NEGLIGIBLE,
+                                        self.model.load(nodej, self.NEGLIGIBLE, self.NEGLIGIBLE,
                                                 -load * spans_x[xbay - 1] / 2,
                                                 self.NEGLIGIBLE, self.NEGLIGIBLE, self.NEGLIGIBLE)
                                     else:
-                                        op.eleLoad('-ele', beam, '-type', '-beamUniform', -load, self.NEGLIGIBLE)
+                                        self.model.eleLoad('-ele', beam, '-type', '-beamUniform', -load, self.NEGLIGIBLE)
 
                             else:
                                 # Beams along Y direction
@@ -671,12 +669,12 @@ class Model:
 
                                 # Applying the load
                                 if apply_point:
-                                    op.load(nodei, self.NEGLIGIBLE, self.NEGLIGIBLE, -load * spans_y[ybay - 1] / 2,
+                                    self.model.load(nodei, self.NEGLIGIBLE, self.NEGLIGIBLE, -load * spans_y[ybay - 1] / 2,
                                             self.NEGLIGIBLE, self.NEGLIGIBLE, self.NEGLIGIBLE)
-                                    op.load(nodej, self.NEGLIGIBLE, self.NEGLIGIBLE, -load * spans_y[ybay - 1] / 2,
+                                    self.model.load(nodej, self.NEGLIGIBLE, self.NEGLIGIBLE, -load * spans_y[ybay - 1] / 2,
                                             self.NEGLIGIBLE, self.NEGLIGIBLE, self.NEGLIGIBLE)
                                 else:
-                                    op.eleLoad('-ele', beam, '-type', '-beamUniform', -load, self.NEGLIGIBLE)
+                                    self.model.eleLoad('-ele', beam, '-type', '-beamUniform', -load, self.NEGLIGIBLE)
 
                                 # Additional load for interior beams
                                 if 1 < xbay < len(spans_x) + 1:
@@ -691,14 +689,14 @@ class Model:
 
                                     # Applying the load
                                     if apply_point:
-                                        op.load(nodei, self.NEGLIGIBLE, self.NEGLIGIBLE,
+                                        self.model.load(nodei, self.NEGLIGIBLE, self.NEGLIGIBLE,
                                                 -load * spans_y[ybay - 1] / 2,
                                                 self.NEGLIGIBLE, self.NEGLIGIBLE, self.NEGLIGIBLE)
-                                        op.load(nodej, self.NEGLIGIBLE, self.NEGLIGIBLE,
+                                        self.model.load(nodej, self.NEGLIGIBLE, self.NEGLIGIBLE,
                                                 -load * spans_y[ybay - 1] / 2,
                                                 self.NEGLIGIBLE, self.NEGLIGIBLE, self.NEGLIGIBLE)
                                     else:
-                                        op.eleLoad('-ele', beam, '-type', '-beamUniform', -load, self.NEGLIGIBLE)
+                                        self.model.eleLoad('-ele', beam, '-type', '-beamUniform', -load, self.NEGLIGIBLE)
 
                     else:
                         distributed = self.loads[(self.loads['Pattern'] == 'distributed')].reset_index(drop=True)
@@ -712,12 +710,12 @@ class Model:
                             # Point load value
                             p = load / 2 * w
                             # Apply the loads
-                            op.load(int(f"{bay}{st}"), self.NEGLIGIBLE, -p, self.NEGLIGIBLE)
-                            op.load(int(f"{bay+1}{st}"), self.NEGLIGIBLE, -p, self.NEGLIGIBLE)
+                            self.model.load(int(f"{bay}{st}"), self.NEGLIGIBLE, -p, self.NEGLIGIBLE)
+                            self.model.load(int(f"{bay+1}{st}"), self.NEGLIGIBLE, -p, self.NEGLIGIBLE)
 
                         else:
                             # Distributed load (kN/m)
-                            op.eleLoad('-ele', int(ele), '-type', '-beamUniform', -load)
+                            self.model.eleLoad('-ele', int(ele), '-type', '-beamUniform', -load)
 
             if apply_point:
                 print('[SUCCESS] Gravity loads as point loads have been defined')
@@ -745,19 +743,18 @@ class Model:
             except:
                 raise ValueError('[EXCEPTION] ELF forces not provided')
 
-            op.timeSeries('Linear', 3)
-            op.pattern('Plain', 300, 3)
+            self.model.pattern('Plain', 300, "Linear")
             for st in range(self.g.nst):
                 load = elfm_forces[(elfm_forces['Storey'] == st + 1)]['Load'].iloc[0]
                 if self.hingeModel == 'haselton':
-                    op.load(int(f"{st + 1}{self.g.nbays + 1}"), load, self.NEGLIGIBLE, self.NEGLIGIBLE)
+                    self.model.load(int(f"{st + 1}{self.g.nbays + 1}"), load, self.NEGLIGIBLE, self.NEGLIGIBLE)
                 else:
                     if self.flag3d:
                         # TODO, to be corrected for 3D
-                        op.load(int(f"{self.g.nbays + 1}{st + 1}"), load, self.NEGLIGIBLE, self.NEGLIGIBLE,
+                        self.model.load(int(f"{self.g.nbays + 1}{st + 1}"), load, self.NEGLIGIBLE, self.NEGLIGIBLE,
                                 self.NEGLIGIBLE, self.NEGLIGIBLE, self.NEGLIGIBLE)
                     else:
-                        op.load(int(f"{self.g.nbays + 1}{st + 1}"), load, self.NEGLIGIBLE, self.NEGLIGIBLE)
+                        self.model.load(int(f"{self.g.nbays + 1}{st + 1}"), load, self.NEGLIGIBLE, self.NEGLIGIBLE)
 
             s = Static()
             s.static_analysis(None, self.flag3d)
@@ -998,7 +995,7 @@ class Model:
                 for ybay in range(int(nbays_y + 1)):
                     nodetag = int(f"{1 + xbay}{1 + ybay}{st}")
                     if nodetag != masternodetag:
-                        op.rigidDiaphragm(3, masternodetag, nodetag)
+                        self.model.rigidDiaphragm(3, masternodetag, nodetag)
             cnt += 1
 
     def model(self):
