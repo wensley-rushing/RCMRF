@@ -65,6 +65,7 @@ class RCMRF:
         :param recorder_cache: str                  Acceleration cache filename, don't leave empty when running multiple
                                                     analysis or MSA to avoid file rewrites
         """
+        self.model = None
         # list of strings for 3D modelling, and string for 2D modelling
         self.sections_file = sections_file
 
@@ -116,7 +117,8 @@ class RCMRF:
         Perform a clean wipe
         :return: None
         """
-        op.wipe()
+        self.model.wipe()
+        self.model = None
 
     def call_model(self, generate_model=True):
         """
