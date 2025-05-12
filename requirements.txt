@@ -1,5 +1,8 @@
 matplotlib~=3.6.2
+xsection
 pandas~=1.5.2
 numpy~=1.24.1
 opensees~=0.0.68
 scipy~=1.8.0
+xara~=0.0.5
+veux
